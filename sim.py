@@ -22,30 +22,40 @@ def gen_X( p ):
     r = np.random.uniform( 0.0, 1.0, 1 )
     return( r < p )
 
+def choose( j, n ):
+    return np.math.factorial( n ) / ( np.math.factorial( j ) * np.math.factorial( n-j ) )
 
 '''
 1) Test with a fixed sample size
 '''
 n = 100
-alpha = 0.10
-p = 0.15
+alpha = 0.05
+p = 0.30
 p0 = 0.30
 p1 = 0.70
 x = np.empty( n )
 
+def L1( p, k, n ):
+    '''
+    probability of accepting H0 if the true value of the parameter is p
+    '''
+    return sum( choose( j, n ) * p**j * ( 1-p )**( n-j ) for j in range( int(k) ) )
 
 def eval_k( n, p0, alpha ):
     return binom.ppf( 1-alpha, n, p0 )
 
-def test1( k ):
+def test1( k, verbose = False ):
     x = np.array( [ gen_X( p ) for i in range( n ) ] ) # draw the sample
     Sn = np.sum( x ) # test statistic
-    print( 'data = \n', np.where( x, 1, 0 ).reshape( -1, 20 ) )
-    print( 'Sn = ', Sn )
-    print( 'k = ', k)
+    L = L1( p, k, n )
+    if verbose:
+        print( 'data = \n', np.where( x, 1, 0 ).reshape( -1, 20 ) )
+        print( 'Sn = ', Sn )
+        print( 'k = ', k)
+        print( 'L1 = ', L)
     return( Sn > k) # True - rejected H0, False - not rejected
 
-H = test1( eval_k( n, p0, alpha ) )
+H = test1( eval_k( n, p0, alpha ), True )
 print( H )
 
 '''

@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.stats as stats
 from scipy.stats import binom
-from scipy.stats import bernoulli # TODO: rethink and remove
 
 '''
 assume that
@@ -28,8 +27,8 @@ def gen_X( p ):
 1) Test with a fixed sample size
 '''
 n = 100
-alpha = 0.05
-p = 0.30
+alpha = 0.10
+p = 0.15
 p0 = 0.30
 p1 = 0.70
 x = np.empty( n )
@@ -39,20 +38,25 @@ def eval_k( n, p0, alpha ):
     return binom.ppf( 1-alpha, n, p0 )
 
 def test1( k ):
-    x = np.array( [ gen_X( p ) for i in range( n ) ] )
-    Sn = np.sum( x )
+    x = np.array( [ gen_X( p ) for i in range( n ) ] ) # draw the sample
+    Sn = np.sum( x ) # test statistic
+    print( 'data = \n', np.where( x, 1, 0 ).reshape( -1, 20 ) )
+    print( 'Sn = ', Sn )
+    print( 'k = ', k)
+    return( Sn > k) # True - rejected H0, False - not rejected
 
-    # print( 'Sn = ', Sn )
-    # print( 'k = ', k)
+H = test1( eval_k( n, p0, alpha ) )
+print( H )
 
-    return( Sn > k)
-
+'''
+# test level
 lvl = 0
 for i in range( 1000 ):
     H = test1( eval_k( n, p0, alpha ) )
     if( H ): lvl += 1
 
 print( lvl/1000 )
+'''
 
 
 '''

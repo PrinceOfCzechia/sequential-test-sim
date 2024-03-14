@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.stats as stats
 from scipy.stats import binom
+import matplotlib.pyplot as plt
 
 '''
 assume that
@@ -31,7 +32,7 @@ def choose( j, n ):
 n = 100
 alpha = 0.05
 p = 0.30
-p0 = 0.30
+p0 = 0.15
 p1 = 0.70
 x = np.empty( n )
 
@@ -68,6 +69,17 @@ for i in range( 1000 ):
 print( lvl/1000 )
 '''
 
+'''
+# plot operational characteristic
+arr_p = np.linspace( 0, 1, 201 )
+arr_L = L1( arr_p, eval_k( n, p0, alpha ), n )
+
+plt.plot( arr_p, arr_L )
+plt.axvline( x=p0, color='red', linestyle='--' )
+plt.xlabel( 'p' )
+plt.ylabel( 'L1(p)' )
+plt.show()
+'''
 
 '''
 2) Two-stage test
@@ -75,6 +87,29 @@ print( lvl/1000 )
 n1 = 50
 n2 = 50
 
+def eval_a( n, alpha, p0 ):
+    return binom.ppf( 1-alpha, n, p0 )
+
+def eval_b( n, alpha, p1 ):
+    return binom.ppf( alpha, n, p1 )
+
+def test2( n1, n2, alpha, p0, p1, verbose=False ):
+    a = eval_a( n1, alpha, p0 )
+    b = eval_b( n2, alpha, p1 )
+    x = np.array( [ gen_X( p ) for i in range( n1 ) ] ) # draw the sample
+    Sn = np.sum( x ) # test statistic
+    if verbose: print( 'a =', a, ', b =', b, ', Sn =', Sn )
+    if( Sn <= a ): return False
+    elif( Sn > b ): return True
+    else:
+        x = np.append( x, np.array( [ gen_X( p ) for i in range( n2 ) ] ) ) # extend the sample
+        b = eval_b( n1+n2, alpha, p1 )
+        Sn = np.sum( x ) # recalculate test statistic
+        if verbose: print( 'b =', b, ', Sn =', Sn)
+        if( Sn <= b ): return False
+        else: return True
+
+# print( test2( n1, n2, alpha, p0, p1, True ) )
 
 '''
 3) 

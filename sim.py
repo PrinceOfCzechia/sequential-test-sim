@@ -57,8 +57,10 @@ def test1( k, verbose = False ):
         print( 'L1 = ', L)
     return( Sn > k) # True - rejected H0, False - not rejected
 
-H = test1( eval_k( n, p0, alpha ), True )
+
+H = test1( eval_k( n, p0, alpha ), verbose = True )
 print( H )
+
 
 '''
 # test level
@@ -70,7 +72,7 @@ for i in range( 1000 ):
 print( lvl/1000 )
 '''
 
-'''
+
 # plot operational characteristic
 arr_p = np.linspace( 0, 1, 201 )
 arr_L = L1( arr_p, eval_k( n, p0, alpha ), n )
@@ -80,13 +82,17 @@ plt.axvline( x=p0, color='red', linestyle='--' )
 plt.xlabel( 'p' )
 plt.ylabel( 'L1(p)' )
 plt.show()
-'''
+
 
 '''
 2) Two-stage test
 '''
 n1 = 50
 n2 = 50
+
+p = 0.40
+p0 = 0.30
+p1 = 0.70
 
 def eval_a( n, p0, alpha ):
     return binom.ppf( 1-alpha/2, n, p0 )
@@ -97,10 +103,10 @@ def eval_b( n, p1, alpha ):
 def L2( p, a, b, n1, n2 ):
     return L1( p, a, n1 ) + sum( choose( j, n1 ) * p**j * ( 1-p )**( n1-j ) * L1( p, b-j, n2 ) for j in range( int(a+1), int(b) ) )
 
-def EN( n1, n2, alpha ):
+def EN( p, n1, n2, alpha ):
     a = eval_a( n1, p0, alpha )
     b = eval_b( n1, p1, alpha )
-    print( round( L1( p, b, n1 ), 4 ), round( L1( p, a, n1 ), 4 ) )
+    # print( round( L1( p, b, n1 ), 4 ), round( L1( p, a, n1 ), 4 ) )
     return n1 + n2*( L1( p, b, n1 ) - L1( p, a, n1) )
 
 def test2( n1, n2, alpha, p0, p1, verbose=False ):
@@ -119,13 +125,23 @@ def test2( n1, n2, alpha, p0, p1, verbose=False ):
         if( Sn <= b ): return False
         else: return True
 
-'''
-print( test2( n1, n2, alpha, p0, p1, True ) )
-print( 'EN =', round( EN( n1, n2, alpha ), ndigits = 4) )
-'''
+
+print( test2( n1, n2, alpha, p0, p1, verbose = True ) )
+print( 'EN =', round( EN( p, n1, n2, alpha ), ndigits = 4) )
+
+arr_p = np.linspace( 0, 1, 201 )
+arr_EN = EN( arr_p, n1, n2, alpha )
+
+
+# plot EN for different p
+plt.plot( arr_p, arr_EN )
+plt.xlabel( 'p' )
+plt.ylabel( 'EN(p)' )
+plt.show()
+
 
 '''
-arr_p = np.linspace( 0, 1, 201 )
+# error
 arr_L = L2( arr_p, eval_a( n, p0, alpha ), eval_b( n, p1, alpha), n1, n2 )
 
 plt.plot( arr_p, arr_L )
@@ -163,20 +179,45 @@ hb = b / math.log( (p1*(1-p0)) / (p0*(1-p1)) )
 
 s = math.log( (1-p0)/(1-p1) ) / math.log( (p1*(1-p0)) / (p0*(1-p1)) )
 
-Qn = ( (p1*(1-p0)) / (p0*(1-p0)) )**(sum( x )) * ( (1-p1) / (1-p0) )**n
+# Qn = ( (p1*(1-p0)) / (p0*(1-p0)) )**(sum( x )) * ( (1-p1) / (1-p0) )**n
 
-def test4( p, n ):
+def test4( p, n, verbose = False ): # (n*counter) is the sample size after extension
     counter = 1
     x = np.array( [ gen_X( p ) for i in range( n ) ] )
     while hb + (n*counter)*s < sum( x ) and sum( x ) < ha + (n*counter)*s:
         counter += 1
         x = np.append( x, np.array( [ gen_X( p ) for i in range( n ) ] ) ) # extend the sample
-    print( counter )
+    if verbose:
+        print( 'data = \n', np.where( x, 1, 0 ).reshape( -1, n ) )
+        print( counter, 'sample extensions required' )
     if sum( x ) < hb + (n*counter)*s: return False
     else: return True
 
-print( test4( 0.46, 10 ) )
+
+print( test4( 0.46, 20, verbose = True ) )
+
 
 '''
-5) 
+5) Curtailed Wald test
 '''
+
+def test5( p, n, N, verbose = False ): # (n*counter) is the sample size after extension
+    counter = 1
+    x = np.array( [ gen_X( p ) for i in range( n ) ] )
+    while hb + (n*counter)*s < sum( x ) and sum( x ) < ha + (n*counter)*s:
+        counter += 1
+        x = np.append( x, np.array( [ gen_X( p ) for i in range( n ) ] ) ) # extend the sample
+        if n*counter >= N: break
+        else: pass
+    if verbose:
+        print( 'data = \n', np.where( x, 1, 0 ).reshape( -1, n ) )
+        print( counter, 'sample extensions required' )
+        if( n*counter >= N ): print( 'Stopped at limit N =', N )
+        else: print( 'Stopped neturally' )
+    if( n*counter >= N ): # limit reached
+        if sum( x ) < len( x ) * s: return False
+        else: return True
+    elif sum( x ) < hb + (n*counter)*s: return False # rule from test4
+    else: return True
+
+print( test5( 0.46, n = 20, N = 100, verbose = True ) )

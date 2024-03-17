@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import scipy.stats as stats
 from scipy.stats import binom
@@ -24,7 +25,7 @@ def gen_X( p ):
     return( r < p )
 
 def choose( j, n ):
-    return np.math.factorial( n ) / ( np.math.factorial( j ) * np.math.factorial( n-j ) )
+    return math.factorial( n ) / ( math.factorial( j ) * math.factorial( n-j ) )
 
 '''
 1) Test with a fixed sample size
@@ -87,15 +88,24 @@ plt.show()
 n1 = 50
 n2 = 50
 
-def eval_a( n, alpha, p0 ):
+def eval_a( n, p0, alpha ):
     return binom.ppf( 1-alpha, n, p0 )
 
-def eval_b( n, alpha, p1 ):
+def eval_b( n, p1, alpha ):
     return binom.ppf( alpha, n, p1 )
 
+def L2( p, a, b, n1, n2 ):
+    return L1( p, a, n1 ) + sum( choose( j, n1 ) * p**j * ( 1-p )**( n1-j ) * L1( p, b-j, n2 ) for j in range( int(a+1), int(b) ) )
+
+def EN( n1, n2, alpha ):
+    a = eval_a( n1, p, alpha )
+    b = eval_b( n1+n2, p, alpha )
+    print( L1( p, b, n1 ), L1( p, a, n1 ) )
+    return n1 + n2*( L1( p, b, n1 ) - L1( p, a, n1) )
+
 def test2( n1, n2, alpha, p0, p1, verbose=False ):
-    a = eval_a( n1, alpha, p0 )
-    b = eval_b( n2, alpha, p1 )
+    a = eval_a( n1, p0, alpha )
+    b = eval_b( n2, p1, alpha )
     x = np.array( [ gen_X( p ) for i in range( n1 ) ] ) # draw the sample
     Sn = np.sum( x ) # test statistic
     if verbose: print( 'a =', a, ', b =', b, ', Sn =', Sn )
@@ -109,11 +119,26 @@ def test2( n1, n2, alpha, p0, p1, verbose=False ):
         if( Sn <= b ): return False
         else: return True
 
-# print( test2( n1, n2, alpha, p0, p1, True ) )
+print( test2( n1, n2, alpha, p0, p1, True ) )
+print( 'EN =', EN( n1, n2, alpha ) )
 
 '''
-3) 
+arr_p = np.linspace( 0, 1, 201 )
+arr_L = L2( arr_p, eval_a( n, p0, alpha ), eval_b( n, p1, alpha), n1, n2 )
+
+plt.plot( arr_p, arr_L )
+plt.axvline( x=p0, color='red', linestyle='--' )
+plt.xlabel( 'p' )
+plt.ylabel( 'L2(p)' )
+plt.show()
 '''
+
+'''
+3) Curtailed-sampling test
+'''
+
+def test3():
+    pass
 
 
 '''

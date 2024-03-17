@@ -32,8 +32,8 @@ def choose( j, n ):
 '''
 n = 100
 alpha = 0.05
-p = 0.30
-p0 = 0.15
+p = 0.60
+p0 = 0.30
 p1 = 0.70
 x = np.empty( n )
 
@@ -89,18 +89,18 @@ n1 = 50
 n2 = 50
 
 def eval_a( n, p0, alpha ):
-    return binom.ppf( 1-alpha, n, p0 )
+    return binom.ppf( 1-alpha/2, n, p0 )
 
 def eval_b( n, p1, alpha ):
-    return binom.ppf( alpha, n, p1 )
+    return binom.ppf( alpha/2, n, p1 )
 
 def L2( p, a, b, n1, n2 ):
     return L1( p, a, n1 ) + sum( choose( j, n1 ) * p**j * ( 1-p )**( n1-j ) * L1( p, b-j, n2 ) for j in range( int(a+1), int(b) ) )
 
 def EN( n1, n2, alpha ):
-    a = eval_a( n1, p, alpha )
-    b = eval_b( n1+n2, p, alpha )
-    print( L1( p, b, n1 ), L1( p, a, n1 ) )
+    a = eval_a( n1, p0, alpha )
+    b = eval_b( n1, p1, alpha )
+    print( round( L1( p, b, n1 ), 4 ), round( L1( p, a, n1 ), 4 ) )
     return n1 + n2*( L1( p, b, n1 ) - L1( p, a, n1) )
 
 def test2( n1, n2, alpha, p0, p1, verbose=False ):
@@ -113,14 +113,16 @@ def test2( n1, n2, alpha, p0, p1, verbose=False ):
     elif( Sn > b ): return True
     else:
         x = np.append( x, np.array( [ gen_X( p ) for i in range( n2 ) ] ) ) # extend the sample
-        b = eval_b( n1+n2, alpha, p1 )
+        b = eval_b( n1+n2, p1, alpha )
         Sn = np.sum( x ) # recalculate test statistic
         if verbose: print( 'b =', b, ', Sn =', Sn)
         if( Sn <= b ): return False
         else: return True
 
+'''
 print( test2( n1, n2, alpha, p0, p1, True ) )
-print( 'EN =', EN( n1, n2, alpha ) )
+print( 'EN =', round( EN( n1, n2, alpha ), ndigits = 4) )
+'''
 
 '''
 arr_p = np.linspace( 0, 1, 201 )
@@ -142,9 +144,38 @@ def test3():
 
 
 '''
-4) 
+4) Wald sequential test
 '''
 
+n = 20
+
+alpha = 0.05
+beta = 0.05
+
+p0 = 0.45
+p1 = 0.55
+
+a = math.log( (1-beta) / alpha )
+b = math.log( beta / (1-alpha))
+
+ha = a / math.log( (p1*(1-p0)) / (p0*(1-p1)) )
+hb = b / math.log( (p1*(1-p0)) / (p0*(1-p1)) )
+
+s = math.log( (1-p0)/(1-p1) ) / math.log( (p1*(1-p0)) / (p0*(1-p1)) )
+
+Qn = ( (p1*(1-p0)) / (p0*(1-p0)) )**(sum( x )) * ( (1-p1) / (1-p0) )**n
+
+def test4( p, n ):
+    counter = 1
+    x = np.array( [ gen_X( p ) for i in range( n ) ] )
+    while hb + (n*counter)*s < sum( x ) and sum( x ) < ha + (n*counter)*s:
+        counter += 1
+        x = np.append( x, np.array( [ gen_X( p ) for i in range( n ) ] ) ) # extend the sample
+    print( counter )
+    if sum( x ) < hb + (n*counter)*s: return False
+    else: return True
+
+print( test4( 0.46, 10 ) )
 
 '''
 5) 

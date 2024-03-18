@@ -32,10 +32,9 @@ def choose( j, n ):
 '''
 n = 100
 alpha = 0.05
-p = 0.60
+p = 0.30
 p0 = 0.30
 p1 = 0.70
-x = np.empty( n )
 
 def L1( p, k, n ):
     '''
@@ -57,10 +56,10 @@ def test1( k, verbose = False ):
         print( 'L1 = ', L)
     return( Sn > k) # True - rejected H0, False - not rejected
 
-
+'''
 H = test1( eval_k( n, p0, alpha ), verbose = True )
 print( H )
-
+'''
 
 '''
 # test level
@@ -72,17 +71,17 @@ for i in range( 1000 ):
 print( lvl/1000 )
 '''
 
-
+'''
 # plot operational characteristic
 arr_p = np.linspace( 0, 1, 201 )
-arr_L = L1( arr_p, eval_k( n, p0, alpha ), n )
+arr_L = L1( arr_p, eval_k( n, p, alpha ), n )
 
 plt.plot( arr_p, arr_L )
 plt.axvline( x=p0, color='red', linestyle='--' )
 plt.xlabel( 'p' )
 plt.ylabel( 'L1(p)' )
 plt.show()
-
+'''
 
 '''
 2) Two-stage test
@@ -125,7 +124,7 @@ def test2( n1, n2, alpha, p0, p1, verbose=False ):
         if( Sn <= b ): return False
         else: return True
 
-
+'''
 print( test2( n1, n2, alpha, p0, p1, verbose = True ) )
 print( 'EN =', round( EN( p, n1, n2, alpha ), ndigits = 4) )
 
@@ -138,7 +137,7 @@ plt.plot( arr_p, arr_EN )
 plt.xlabel( 'p' )
 plt.ylabel( 'EN(p)' )
 plt.show()
-
+'''
 
 '''
 # error
@@ -172,7 +171,7 @@ p0 = 0.45
 p1 = 0.55
 
 a = math.log( (1-beta) / alpha )
-b = math.log( beta / (1-alpha))
+b = math.log( beta / (1-alpha) )
 
 ha = a / math.log( (p1*(1-p0)) / (p0*(1-p1)) )
 hb = b / math.log( (p1*(1-p0)) / (p0*(1-p1)) )
@@ -189,13 +188,14 @@ def test4( p, n, verbose = False ): # (n*counter) is the sample size after exten
         x = np.append( x, np.array( [ gen_X( p ) for i in range( n ) ] ) ) # extend the sample
     if verbose:
         print( 'data = \n', np.where( x, 1, 0 ).reshape( -1, n ) )
-        print( counter, 'sample extensions required' )
+        print( counter-1, 'sample extensions required' )
     if sum( x ) < hb + (n*counter)*s: return False
     else: return True
 
 
-print( test4( 0.46, 20, verbose = True ) )
-
+'''
+print( test4( 0.46, 5, verbose = True ) )
+'''
 
 '''
 5) Curtailed Wald test
@@ -211,13 +211,73 @@ def test5( p, n, N, verbose = False ): # (n*counter) is the sample size after ex
         else: pass
     if verbose:
         print( 'data = \n', np.where( x, 1, 0 ).reshape( -1, n ) )
-        print( counter, 'sample extensions required' )
+        print( counter-1, 'sample extensions required' )
         if( n*counter >= N ): print( 'Stopped at limit N =', N )
-        else: print( 'Stopped neturally' )
+        else: print( 'Stopped naturally' )
     if( n*counter >= N ): # limit reached
         if sum( x ) < len( x ) * s: return False
         else: return True
     elif sum( x ) < hb + (n*counter)*s: return False # rule from test4
     else: return True
 
+'''
 print( test5( 0.46, n = 20, N = 100, verbose = True ) )
+'''
+
+
+'''
+6.1) Normal distribution variance test, known expectation
+'''
+
+alpha = 0.05
+beta = 0.05
+
+mu = 0
+sigma = 0.9
+
+sigma0 = 1
+sigma1 = 1.5
+
+a = math.log( (1-beta) / alpha )
+b = math.log( beta / (1-alpha) )
+
+ha = 2*a / ( sigma0**(-2) - sigma1**(-2) )
+hb = 2*b / ( sigma0**(-2) - sigma1**(-2) )
+s = 2*math.log( sigma1/sigma0) / ( sigma0**(-2) - sigma1**(-2) )
+
+n = 2
+
+def testN1( n, ha, hb, s, mu, sigma, verbose = False ):
+    counter = 1
+    x = np.random.normal( mu, math.sqrt(sigma), size = n )
+    while hb + (n*counter)*s < sum( (x-mu)**2 ) and sum( (x-mu)**2 ) < ha + (n*counter)*s:
+        counter += 1
+        x = np.append( x, np.random.normal( mu, math.sqrt(sigma), size = n ) ) # extend the sample
+    if verbose:
+        print( 'data = \n', np.round( x, decimals = 3 ).reshape( -1, n ) )
+        print( counter-1, 'sample extensions required' )
+    if sum( (x-mu)**2 ) < hb + (n*counter)*s: return False
+    else: return True
+
+print( testN1( n, ha, hb, s, mu, sigma, verbose = True ) )
+
+
+'''
+6.2) Normal distribution variance test, unknown expectation
+'''
+
+mu = 0
+sigma = 2
+
+sigma0 = 1
+sigma1 = 10
+
+a = 1 # TODO
+b = -1 # TODO
+
+ha = 2*a / ( sigma0**(-2) - sigma1**(-2) )
+hb = 2*b / ( sigma0**(-2) - sigma1**(-2) )
+s = 2*math.log( sigma1/sigma0) / ( sigma0**(-2) - sigma1**(-2) )
+
+def testN2( ):
+    pass

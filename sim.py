@@ -233,10 +233,10 @@ alpha = 0.05
 beta = 0.05
 
 mu = 0
-sigma = 0.9
+sigma = 4
 
 sigma0 = 1
-sigma1 = 1.5
+sigma1 = 4
 
 a = math.log( (1-beta) / alpha )
 b = math.log( beta / (1-alpha) )
@@ -259,25 +259,42 @@ def testN1( n, ha, hb, s, mu, sigma, verbose = False ):
     if sum( (x-mu)**2 ) < hb + (n*counter)*s: return False
     else: return True
 
+'''
 print( testN1( n, ha, hb, s, mu, sigma, verbose = True ) )
+'''
 
 
 '''
 6.2) Normal distribution variance test, unknown expectation
 '''
 
+alpha = 0.05
+beta = 0.05
+
 mu = 0
-sigma = 2
+sigma = 4
 
 sigma0 = 1
-sigma1 = 10
+sigma1 = 4
 
-a = 1 # TODO
-b = -1 # TODO
+a = math.log( (1-beta) / alpha )
+b = math.log( beta / (1-alpha) )
 
 ha = 2*a / ( sigma0**(-2) - sigma1**(-2) )
 hb = 2*b / ( sigma0**(-2) - sigma1**(-2) )
 s = 2*math.log( sigma1/sigma0) / ( sigma0**(-2) - sigma1**(-2) )
 
-def testN2( ):
-    pass
+def testN2( n, ha, hb, s, mu, sigma, verbose = False ):
+    counter = 1
+    x = np.random.normal( mu, math.sqrt(sigma), size = n )
+    while hb + (n*counter)*s < sum( ( x - np.mean(x) )**2 ) and sum( ( x - np.mean(x) )**2 ) < ha + (n*counter)*s:
+        counter += 1
+        x = np.append( x, np.random.normal( mu, math.sqrt(sigma), size = n ) ) # extend the sample
+    if verbose:
+        print( 'data = \n', np.round( x, decimals = 3 ).reshape( -1, n ) )
+        print( counter-1, 'sample extensions required' )
+    if sum( ( x - np.mean(x) )**2 ) < hb + (n*counter)*s: return False
+    else: return True
+
+mu = np.random.uniform( 0.0, 100.0, 1)
+print( testN1( n, ha, hb, s, mu, sigma, verbose = True ) )

@@ -227,12 +227,16 @@ def test3( n, N, p0, alpha, verbose = False ):
             x = np.append( x, gen_X( p ) )
             Sn = sum( x )
             n += 1
-    if verbose: print( 'Sample of size', n, 'c =', c, 'Sn =', Sn )
+    if verbose:
+        print( 'Sample of size', n )
+        print( 'c =', c )
+        print( 'Sn =', Sn )
+        print( 'L3 =', np.round( L3( p, c, N ), decimals = 3 ) )
     return False
 
-
+'''
 print( test3( n, N, p0, alpha, verbose = True ) )
-print( L3( p, eval_c( N, p0, alpha ), N ))
+'''
 
 arr_p = np.linspace( 0, 1, 201 )
 arr_L = L3( arr_p, eval_c( N, p0, alpha ), N )
@@ -278,7 +282,7 @@ alpha = 0.05
 beta = 0.05
 
 p0 = 0.45
-p1 = 0.55
+p1 = 0.46
 
 a = math.log( (1-beta) / alpha )
 b = math.log( beta / (1-alpha) )
@@ -303,9 +307,9 @@ def test4( p, n_init, n_add, verbose = False ): # (n*counter) is the sample size
     else: return True
 
 
-'''
+
 print( test4( 0.45, n_init = 10, n_add = 1, verbose = True ) )
-'''
+
 
 '''
 5) Curtailed Wald test

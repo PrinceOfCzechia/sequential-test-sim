@@ -200,11 +200,16 @@ alpha = 0.05
 
 p = 0.30
 
-def eval_c( N, p0, alpha ): # TODO: check
+def eval_c( N, p0, alpha ):
     return binom.ppf( 1-alpha, N, p0 )
 
 def L3( p, c, N ):
     return sum( choose( d, N ) * p**d * (1-p)**(N-d) for d in range( int(c) ) )
+
+def EN3( p, c, N ):
+    k1 = c/p * sum( choose( d, N+1 ) * p**d * (1-p)**(N+1-d) for d in range( int(c+1), int(N+2) ) )
+    k2 = (N+1-c) / (1-p) * sum( choose( d, N+1 ) * p**d * (1-p)**(N+1-d) for d in range( int(c) ) )
+    return k1 + k2
 
 def test3( n, N, p0, alpha, verbose = False ):
     c = eval_c( N, p0, alpha )
@@ -232,10 +237,29 @@ print( L3( p, eval_c( N, p0, alpha ), N ))
 arr_p = np.linspace( 0, 1, 201 )
 arr_L = L3( arr_p, eval_c( N, p0, alpha ), N )
 
+arr_p = np.linspace( 0.005, 0.995, 199 )
+c = eval_c( N, p0, alpha )
+arr_EN3 = EN3( arr_p, c, N )
+
+'''
 plt.plot( arr_p, arr_L )
 plt.axvline( x=p0, color='red', linestyle='--' )
 plt.text( p0-0.01, -0.02, 'p0', color='red', verticalalignment='bottom', horizontalalignment='right' )
+plt.xlabel( 'p' )
+plt.ylabel( 'L3(p)' )
+plt.title( 'Operational characteristic of test3' )
 plt.show()
+'''
+
+'''
+plt.plot( arr_p, arr_EN3 )
+plt.axvline( x=p0, color='red', linestyle='--' )
+plt.text( p0-0.01, 80, 'p0', color='red', verticalalignment='bottom', horizontalalignment='right' )
+plt.axvline( x=p1, color='purple', linestyle='--' )
+plt.text( p1+0.02, 80, 'p1', color='purple', verticalalignment='bottom', horizontalalignment='left' )
+plt.title( 'Expected sample size of test3' )
+plt.show()
+'''
 
 '''
 success_counter = 0

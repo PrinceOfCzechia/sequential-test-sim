@@ -188,30 +188,33 @@ p0 = 0.3
 p1 = 0.5
 alpha = 0.05
 
-p = 0.3
+p = 0.5
 
 def eval_c( N, p0, alpha ): # TODO: check
     return binom.ppf( 1-alpha, N, p0 )
 
-def test3( n, N, p0, alpha ):
+def test3( n, N, p0, alpha, verbose = False ):
     c = eval_c( N, p0, alpha )
     x = np.array( [ gen_X( p ) for i in range( n ) ] ) # draw the sample
     Sn = np.sum( x ) # test statistic
     while n < N and Sn <= c:
-        if( Sn == c ): return True
+        if( Sn == c ):
+            if verbose: print( 'Sample of size', n, 'c =', c, 'Sn =', Sn )
+            return True
         else:
             x = np.append( x, gen_X( p ) )
             Sn = sum( x )
             n += 1
+    if verbose: print( 'Sample of size', n, 'c =', c, 'Sn =', Sn )
     return False
 
-print( test3( n, N, p0, alpha ) )
+print( test3( n, N, p0, alpha, verbose = True ) )
 
 success_counter = 0
 for i in range(1000):
     success_counter += test3( n, N, p0, alpha )
 
-print( 'Empirical test level', success_counter/1000 )
+print( 'Percentage of rejections:', success_counter/1000 )
 
 '''
 4) Wald sequential test

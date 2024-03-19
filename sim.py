@@ -33,8 +33,8 @@ def choose( j, n ):
 n = 100
 alpha = 0.05
 p = 0.30
-p0 = 0.30
-p1 = 0.70
+p0 = 0.500
+p1 = 0.708
 
 def L1( p, k, n ):
     '''
@@ -71,17 +71,25 @@ for i in range( 1000 ):
 print( lvl/1000 )
 '''
 
-'''
+
 # plot operational characteristic
 arr_p = np.linspace( 0, 1, 201 )
-arr_L = L1( arr_p, eval_k( n, p, alpha ), n )
+arr_L = L1( arr_p, eval_k( n, p0, alpha ), n )
 
+'''
 plt.plot( arr_p, arr_L )
 plt.axvline( x=p0, color='red', linestyle='--' )
+plt.text( p0-0.01, -0.02, 'p0', color='red', verticalalignment='bottom', horizontalalignment='right' )
+plt.plot( 0.45, 0.99, marker='+', color='green', markersize=10 )
+plt.plot( 0.50, 0.95, marker='+', color='green', markersize=10 )
+plt.plot( 0.60, 0.50, marker='+', color='green', markersize=10 )
+plt.plot( 0.70, 0.04, marker='+', color='green', markersize=10 )
 plt.xlabel( 'p' )
 plt.ylabel( 'L1(p)' )
+plt.title( 'Operational characteristic of test1' )
 plt.show()
 '''
+
 
 '''
 2) Two-stage test
@@ -90,8 +98,8 @@ n1 = 50
 n2 = 50
 
 p = 0.20
-p0 = 0.10
-p1 = 0.40
+p0 = 0.20
+p1 = 0.30
 
 def eval_a( n, p0, alpha ):
     return binom.ppf( 1-alpha/2, n, p0 )
@@ -105,7 +113,8 @@ def L2( p, a, b, n1, n2 ):
         return 2
     else: return L1( p, a, n1 ) + sum( choose( j, n1 ) * p**j * ( 1-p )**( n1-j ) * L1( p, b-j, n2 ) for j in range( int(a+1), int(b+1) ) )
 
-def EN( p, n1, n2, alpha ):
+
+def EN2( p, n1, n2, alpha ):
     a = eval_a( n1, p0, alpha )
     b = eval_b( n1, p1, alpha )
     # print( round( L1( p, b, n1 ), 4 ), round( L1( p, a, n1 ), 4 ) )
@@ -129,17 +138,18 @@ def test2( n1, n2, alpha, p0, p1, verbose=False ):
 
 '''
 print( test2( n1, n2, alpha, p0, p1, verbose = True ) )
-print( 'EN =', round( EN( p, n1, n2, alpha ), ndigits = 4) )
+print( 'EN2 =', round( EN2( p, n1, n2, alpha ), ndigits = 4) )
 '''
-
+'''
 arr_p = np.linspace( 0, 1, 201 )
-arr_EN = EN( arr_p, n1, n2, alpha )
+arr_EN2 = EN2( arr_p, n1, n2, alpha )
 
-'''
-# plot EN for different p
-plt.plot( arr_p, arr_EN )
+
+# plot EN2 for different p
+plt.plot( arr_p, arr_EN2 )
 plt.xlabel( 'p' )
-plt.ylabel( 'EN(p)' )
+plt.ylabel( 'EN2(p)' )
+plt.title( 'Expected sample size with p0 = 0.35, p1 = 0.65' )
 plt.show()
 '''
 
@@ -163,7 +173,7 @@ for i in range(5000):
     mean_E += n1 + n2 * test2_count( n1, n2, alpha, p0, p1 )
 
 mean_E /= 5000
-print('Empirical mean N =', mean_E, 'versus theoretical EN =', EN( p, n1, n2, alpha ) )
+print('Empirical mean N =', mean_E, 'versus theoretical EN2 =', EN2( p, n1, n2, alpha ) )
 '''
 
 '''
@@ -184,14 +194,17 @@ plt.show()
 N = 200 # maximum sample size
 n = 20 # single batch size
 
-p0 = 0.3
-p1 = 0.5
+p0 = 0.30
+p1 = 0.50
 alpha = 0.05
 
-p = 0.5
+p = 0.30
 
 def eval_c( N, p0, alpha ): # TODO: check
     return binom.ppf( 1-alpha, N, p0 )
+
+def L3( p, c, N ):
+    return sum( choose( d, N ) * p**d * (1-p)**(N-d) for d in range( int(c) ) )
 
 def test3( n, N, p0, alpha, verbose = False ):
     c = eval_c( N, p0, alpha )
@@ -199,7 +212,11 @@ def test3( n, N, p0, alpha, verbose = False ):
     Sn = np.sum( x ) # test statistic
     while n < N and Sn <= c:
         if( Sn == c ):
-            if verbose: print( 'Sample of size', n, 'c =', c, 'Sn =', Sn )
+            if verbose:
+                print( 'Sample of size', n )
+                print( 'c =', c )
+                print( 'Sn =', Sn )
+                print( 'L3 =', np.round( L3( p, c, N ), decimals = 3 ) )
             return True
         else:
             x = np.append( x, gen_X( p ) )
@@ -208,19 +225,30 @@ def test3( n, N, p0, alpha, verbose = False ):
     if verbose: print( 'Sample of size', n, 'c =', c, 'Sn =', Sn )
     return False
 
-print( test3( n, N, p0, alpha, verbose = True ) )
 
+print( test3( n, N, p0, alpha, verbose = True ) )
+print( L3( p, eval_c( N, p0, alpha ), N ))
+
+arr_p = np.linspace( 0, 1, 201 )
+arr_L = L3( arr_p, eval_c( N, p0, alpha ), N )
+
+plt.plot( arr_p, arr_L )
+plt.axvline( x=p0, color='red', linestyle='--' )
+plt.text( p0-0.01, -0.02, 'p0', color='red', verticalalignment='bottom', horizontalalignment='right' )
+plt.show()
+
+'''
 success_counter = 0
 for i in range(1000):
     success_counter += test3( n, N, p0, alpha )
-
 print( 'Percentage of rejections:', success_counter/1000 )
+'''
 
 '''
 4) Wald sequential test
 '''
 
-n = 20
+n = 10
 
 alpha = 0.05
 beta = 0.05
@@ -238,21 +266,21 @@ s = math.log( (1-p0)/(1-p1) ) / math.log( (p1*(1-p0)) / (p0*(1-p1)) )
 
 # Qn = ( (p1*(1-p0)) / (p0*(1-p0)) )**(sum( x )) * ( (1-p1) / (1-p0) )**n
 
-def test4( p, n, verbose = False ): # (n*counter) is the sample size after extension
+def test4( p, n_init, n_add, verbose = False ): # (n*counter) is the sample size after extension
     counter = 1
-    x = np.array( [ gen_X( p ) for i in range( n ) ] )
+    x = np.array( [ gen_X( p ) for i in range( n_init ) ] )
     while hb + (n*counter)*s < sum( x ) and sum( x ) < ha + (n*counter)*s:
         counter += 1
-        x = np.append( x, np.array( [ gen_X( p ) for i in range( n ) ] ) ) # extend the sample
+        x = np.append( x, np.array( [ gen_X( p ) for i in range( n_add ) ] ) ) # extend the sample
     if verbose:
-        print( 'data = \n', np.where( x, 1, 0 ).reshape( -1, n ) )
+        print( 'data = \n', np.where( x, 1, 0 ) )
         print( counter-1, 'sample extensions required' )
     if sum( x ) < hb + (n*counter)*s: return False
     else: return True
 
 
 '''
-print( test4( 0.46, 5, verbose = True ) )
+print( test4( 0.45, n_init = 10, n_add = 1, verbose = True ) )
 '''
 
 '''

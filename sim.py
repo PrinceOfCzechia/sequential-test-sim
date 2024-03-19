@@ -40,7 +40,7 @@ def L1( p, k, n ):
     '''
     probability of accepting H0 if the true value of the parameter is p
     '''
-    return sum( choose( j, n ) * p**j * ( 1-p )**( n-j ) for j in range( int(k) ) )
+    return sum( choose( j, n ) * p**j * ( 1-p )**( n-j ) for j in range( int(k+1) ) )
 
 def eval_k( n, p0, alpha ):
     return binom.ppf( 1-alpha, n, p0 )
@@ -89,9 +89,9 @@ plt.show()
 n1 = 50
 n2 = 50
 
-p = 0.40
-p0 = 0.30
-p1 = 0.70
+p = 0.20
+p0 = 0.10
+p1 = 0.40
 
 def eval_a( n, p0, alpha ):
     return binom.ppf( 1-alpha/2, n, p0 )
@@ -100,7 +100,10 @@ def eval_b( n, p1, alpha ):
     return binom.ppf( alpha/2, n, p1 )
 
 def L2( p, a, b, n1, n2 ):
-    return L1( p, a, n1 ) + sum( choose( j, n1 ) * p**j * ( 1-p )**( n1-j ) * L1( p, b-j, n2 ) for j in range( int(a+1), int(b) ) )
+    if( a > n1 ):
+        print('Error in the formula, b-j < 0')
+        return 2
+    else: return L1( p, a, n1 ) + sum( choose( j, n1 ) * p**j * ( 1-p )**( n1-j ) * L1( p, b-j, n2 ) for j in range( int(a+1), int(b+1) ) )
 
 def EN( p, n1, n2, alpha ):
     a = eval_a( n1, p0, alpha )
@@ -118,7 +121,7 @@ def test2( n1, n2, alpha, p0, p1, verbose=False ):
     elif( Sn > b ): return True
     else:
         x = np.append( x, np.array( [ gen_X( p ) for i in range( n2 ) ] ) ) # extend the sample
-        b = eval_b( n1+n2, p1, alpha )
+        b = eval_b( n1+n2, p1, alpha ) # adjust b
         Sn = np.sum( x ) # recalculate test statistic
         if verbose: print( 'b =', b, ', Sn =', Sn)
         if( Sn <= b ): return False
@@ -127,11 +130,12 @@ def test2( n1, n2, alpha, p0, p1, verbose=False ):
 '''
 print( test2( n1, n2, alpha, p0, p1, verbose = True ) )
 print( 'EN =', round( EN( p, n1, n2, alpha ), ndigits = 4) )
+'''
 
 arr_p = np.linspace( 0, 1, 201 )
 arr_EN = EN( arr_p, n1, n2, alpha )
 
-
+'''
 # plot EN for different p
 plt.plot( arr_p, arr_EN )
 plt.xlabel( 'p' )
@@ -139,12 +143,35 @@ plt.ylabel( 'EN(p)' )
 plt.show()
 '''
 
-'''
-# error
-arr_L = L2( arr_p, eval_a( n, p0, alpha ), eval_b( n, p1, alpha), n1, n2 )
+def test2_count( n1, n2, alpha, p0, p1 ):
+    '''
+    return 0 if decided without sample extension
+    return 1 if sample extended
+    '''
+    a = eval_a( n1, p0, alpha )
+    b = eval_b( n2, p1, alpha )
+    x = np.array( [ gen_X( p ) for i in range( n1 ) ] ) # draw the sample
+    Sn = np.sum( x ) # test statistic
+    if( Sn <= a ): return 0
+    elif( Sn > b ): return 0
+    else: return 1
 
+'''
+TODO: revisit
+mean_E = 0
+for i in range(5000):
+    mean_E += n1 + n2 * test2_count( n1, n2, alpha, p0, p1 )
+
+mean_E /= 5000
+print('Empirical mean N =', mean_E, 'versus theoretical EN =', EN( p, n1, n2, alpha ) )
+'''
+
+'''
+arr_L = L2( arr_p, eval_a( n, p0, alpha ), eval_b( n, p1, alpha), n1, n2 )
+print( 'p0 =', p0, 'p1 =', p1 )
 plt.plot( arr_p, arr_L )
 plt.axvline( x=p0, color='red', linestyle='--' )
+plt.axvline( x=p1, color='green', linestyle='--' )
 plt.xlabel( 'p' )
 plt.ylabel( 'L2(p)' )
 plt.show()
@@ -154,9 +181,37 @@ plt.show()
 3) Curtailed-sampling test
 '''
 
-def test3():
-    pass
+N = 200 # maximum sample size
+n = 20 # single batch size
 
+p0 = 0.3
+p1 = 0.5
+alpha = 0.05
+
+p = 0.3
+
+def eval_c( N, p0, alpha ): # TODO: check
+    return binom.ppf( 1-alpha, N, p0 )
+
+def test3( n, N, p0, alpha ):
+    c = eval_c( N, p0, alpha )
+    x = np.array( [ gen_X( p ) for i in range( n ) ] ) # draw the sample
+    Sn = np.sum( x ) # test statistic
+    while n < N and Sn <= c:
+        if( Sn == c ): return True
+        else:
+            x = np.append( x, gen_X( p ) )
+            Sn = sum( x )
+            n += 1
+    return False
+
+print( test3( n, N, p0, alpha ) )
+
+success_counter = 0
+for i in range(1000):
+    success_counter += test3( n, N, p0, alpha )
+
+print( 'Empirical test level', success_counter/1000 )
 
 '''
 4) Wald sequential test
@@ -296,5 +351,7 @@ def testN2( n, ha, hb, s, mu, sigma, verbose = False ):
     if sum( ( x - np.mean(x) )**2 ) < hb + (n*counter)*s: return False
     else: return True
 
-mu = np.random.uniform( 0.0, 100.0, 1)
+'''
+mu = np.random.uniform( 0.0, 100.0, 1) # so that mu is truly unknown
 print( testN1( n, ha, hb, s, mu, sigma, verbose = True ) )
+'''

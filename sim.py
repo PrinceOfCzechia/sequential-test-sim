@@ -315,7 +315,7 @@ print( test4( 0.45, n_init = 10, n_add = 1, verbose = True ) )
 5) Curtailed Wald test
 '''
 
-def test5( p, n, N, verbose = False ): # (n*counter) is the sample size after extension
+def test5( p, N, n=1, verbose = False ): # (n*counter) is the sample size after extension
     counter = 1
     x = np.array( [ gen_X( p ) for i in range( n ) ] )
     while hb + (n*counter)*s < sum( x ) and sum( x ) < ha + (n*counter)*s:
@@ -324,7 +324,7 @@ def test5( p, n, N, verbose = False ): # (n*counter) is the sample size after ex
         if n*counter >= N: break
         else: pass
     if verbose:
-        print( 'data = \n', np.where( x, 1, 0 ).reshape( -1, n ) )
+        print( 'data = \n', np.where( x, 1, 0 ) )
         print( counter-1, 'sample extensions required' )
         if( n*counter >= N ): print( 'Stopped at limit N =', N )
         else: print( 'Stopped naturally' )
@@ -361,14 +361,14 @@ s = 2*math.log( sigma1/sigma0) / ( sigma0**(-2) - sigma1**(-2) )
 
 n = 2
 
-def testN1( n, ha, hb, s, mu, sigma, verbose = False ):
+def testN1( ha, hb, s, mu, sigma, n = 1, verbose = False ):
     counter = 1
     x = np.random.normal( mu, math.sqrt(sigma), size = n )
     while hb + (n*counter)*s < sum( (x-mu)**2 ) and sum( (x-mu)**2 ) < ha + (n*counter)*s:
         counter += 1
         x = np.append( x, np.random.normal( mu, math.sqrt(sigma), size = n ) ) # extend the sample
     if verbose:
-        print( 'data = \n', np.round( x, decimals = 3 ).reshape( -1, n ) )
+        print( 'data = \n', np.round( x, decimals = 3 ) )
         print( counter-1, 'sample extensions required' )
     if sum( (x-mu)**2 ) < hb + (n*counter)*s: return False
     else: return True
@@ -385,7 +385,6 @@ print( testN1( n, ha, hb, s, mu, sigma, verbose = True ) )
 alpha = 0.05
 beta = 0.05
 
-mu = 0
 sigma = 4
 
 sigma0 = 1
@@ -398,19 +397,19 @@ ha = 2*a / ( sigma0**(-2) - sigma1**(-2) )
 hb = 2*b / ( sigma0**(-2) - sigma1**(-2) )
 s = 2*math.log( sigma1/sigma0) / ( sigma0**(-2) - sigma1**(-2) )
 
-def testN2( n, ha, hb, s, mu, sigma, verbose = False ):
+def testN2( ha, hb, s, mu, sigma, n = 1, verbose = False ):
     counter = 1
     x = np.random.normal( mu, math.sqrt(sigma), size = n )
     while hb + (n*counter)*s < sum( ( x - np.mean(x) )**2 ) and sum( ( x - np.mean(x) )**2 ) < ha + (n*counter)*s:
         counter += 1
         x = np.append( x, np.random.normal( mu, math.sqrt(sigma), size = n ) ) # extend the sample
     if verbose:
-        print( 'data = \n', np.round( x, decimals = 3 ).reshape( -1, n ) )
+        print( 'data = \n', np.round( x, decimals = 3 ) )
         print( counter-1, 'sample extensions required' )
     if sum( ( x - np.mean(x) )**2 ) < hb + (n*counter)*s: return False
     else: return True
 
 '''
 mu = np.random.uniform( 0.0, 100.0, 1) # so that mu is truly unknown
-print( testN1( n, ha, hb, s, mu, sigma, verbose = True ) )
+print( testN1( ha, hb, s, mu, sigma, n = 5, verbose = True ) )
 '''

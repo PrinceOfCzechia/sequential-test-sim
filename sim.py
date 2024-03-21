@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import scipy.stats as stats
 from scipy.stats import binom
 import matplotlib.pyplot as plt
 
@@ -130,7 +129,7 @@ def test2( n1, n2, alpha, p0, p1, verbose=False ):
     elif( Sn > b ): return True
     else:
         x = np.append( x, np.array( [ gen_X( p ) for i in range( n2 ) ] ) ) # extend the sample
-        b = eval_b( n1+n2, p1, alpha ) # adjust b
+        b = eval_b( n1+n2, p1, 2*alpha ) # adjust b
         Sn = np.sum( x ) # recalculate test statistic
         if verbose: print( 'b =', b, ', Sn =', Sn)
         if( Sn <= b ): return False
@@ -374,7 +373,7 @@ def testN1( ha, hb, s, mu, sigma, n = 1, verbose = False ):
     else: return True
 
 '''
-print( testN1( n, ha, hb, s, mu, sigma, verbose = True ) )
+print( testN1( ha, hb, s, mu, sigma, n, verbose = True ) )
 '''
 
 

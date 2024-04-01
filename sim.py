@@ -129,21 +129,31 @@ def test2( n1, n2, alpha, p0, p1, verbose=False ):
     elif( Sn > b ): return True
     else:
         x = np.append( x, np.array( [ gen_X( p ) for i in range( n2 ) ] ) ) # extend the sample
-        b = eval_b( n1+n2, p1, 2*alpha ) # adjust b
+        a = eval_a( n1+n2, p0, 2*alpha ) # adjust b
         Sn = np.sum( x ) # recalculate test statistic
-        if verbose: print( 'b =', b, ', Sn =', Sn)
-        if( Sn <= b ): return False
+        if verbose: print( 'a =', a, ', Sn =', Sn)
+        if( Sn <= a ): return False
         else: return True
 
-'''
+
 print( test2( n1, n2, alpha, p0, p1, verbose = True ) )
+'''
+R = 20000
+test2test = np.zeros(R)
+for i in range( R ):
+    test2test[ i ] = test2( n1, n2, alpha, p0, p1 )
+
+s = int(sum(test2test))
+print( s, 'rejections out of', R, 'Rejected in', s/R*100, 'percent of cases.' )
+'''
+'''
 print( 'EN2 =', round( EN2( p, n1, n2, alpha ), ndigits = 4) )
 '''
 '''
 arr_p = np.linspace( 0, 1, 201 )
 arr_EN2 = EN2( arr_p, n1, n2, alpha )
-
-
+'''
+'''
 # plot EN2 for different p
 plt.plot( arr_p, arr_EN2 )
 plt.xlabel( 'p' )
@@ -166,7 +176,7 @@ def test2_count( n1, n2, alpha, p0, p1 ):
     else: return 1
 
 '''
-TODO: revisit
+# TODO: revisit
 mean_E = 0
 for i in range(5000):
     mean_E += n1 + n2 * test2_count( n1, n2, alpha, p0, p1 )
@@ -305,10 +315,9 @@ def test4( p, n_init, n_add, verbose = False ): # (n*counter) is the sample size
     if sum( x ) < hb + (n*counter)*s: return False
     else: return True
 
-
-
+'''
 print( test4( 0.45, n_init = 10, n_add = 1, verbose = True ) )
-
+'''
 
 '''
 5) Curtailed Wald test
